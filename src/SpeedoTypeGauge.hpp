@@ -6,8 +6,8 @@
 #define purple 0xEA16
 
 
-#define _BIG_DIAL
-#define SMALL_DIAL
+#define BIG_DIAL
+#define _SMALL_DIAL
 
 #ifdef SMALL_DIAL
 #include "M5Dial.h"
@@ -72,6 +72,8 @@ class SpeedoTypeGauge {
         int n = 0;
         int angle = 0;
         int scaleFactor = 1;
+        int unitsLocationX = 120;
+        int unitsLocationY = 220;
 #endif
 
 #ifdef BIG_DIAL
@@ -83,6 +85,8 @@ class SpeedoTypeGauge {
         int n=0;
         int angle=0;
         int scaleFactor = 2;
+        int unitsLocationX = 220;
+        int unitsLocationY = 380;        
 #endif
 
         float x[360]; //outer points of Speed gaouges
@@ -97,15 +101,32 @@ class SpeedoTypeGauge {
         float sA;
 
         double rad=0.01745;
+        int gaugeValue = 0;
         float speedAngle;
-
+        boolean showNumberInMiddle = false;
+        boolean sweep = true;
+        int maxValue = 260;
+        int lowNumericColor = TFT_WHITE;
+        int highNumericColor = purple;
+        int backgroundColor = TFT_BLACK;
+        char units[10] = "    ";
+        int spacingFactor = (maxValue / 22); //22 was a magic value in the original gui
+        void setSpacingFactor();
+        
   
     public:
         SpeedoTypeGauge(){};
         ~SpeedoTypeGauge(){};
         void speedoSetup();
         void speedoLoop();
-        void drawGage() ;
+        void setMaxValue(int maxValue);
+        void setLowNumericColor(int lowNumericColor);
+        void setHighNumericColor(int highNumericColor);
+        void setBackgroundColor(int backgroundColor);
+        void setUnits(char *units);
+        void setShowNumberInMiddle(bool showNumberInMiddle);
+        void setSweep(bool sweep);
+        void drawGauge() ;
 
 
 };

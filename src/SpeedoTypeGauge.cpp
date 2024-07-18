@@ -50,52 +50,99 @@
             }
          } /* setup*/
 
-        void SpeedoTypeGauge::drawGage() {
+        void SpeedoTypeGauge::setShowNumberInMiddle(bool showNumberInMiddle) {
+            this->showNumberInMiddle = showNumberInMiddle;
+         } /* ShowNumberInMiddle */
+
+        void SpeedoTypeGauge::setMaxValue(int maxValue) {
+            this->maxValue = maxValue;
+            this->setSpacingFactor();
+         } /* SetMaxValue */ 
+
+         void SpeedoTypeGauge::setLowNumericColor(int lowNumericColor) {
+            this->lowNumericColor = lowNumericColor;
+         } /* SetLowNumericColor */ 
+
+        void SpeedoTypeGauge::setHighNumericColor(int highNumericColor) {
+            this->highNumericColor = highNumericColor;
+         } /* SetLowNumericColor */ 
+
+         void SpeedoTypeGauge::setUnits(char *units) {
+            strcpy(this->units, units);
+         } /* SetUnits */
+
+         void SpeedoTypeGauge::setSpacingFactor(void) {
+            this->spacingFactor = (300 / maxValue) * 12;
+         } /* SetSpacingFactor */
+
+         void SpeedoTypeGauge::setSweep(bool sweep) {
+            this->sweep = sweep;
+         } /* SetSweep */
+
+         void SpeedoTypeGauge::setBackgroundColor(int backgroundColor) {
+            this->backgroundColor = backgroundColor;
+         } /* SetBackgroundColor */
+
+        void SpeedoTypeGauge::drawGauge() {
             /* outermost semicircle */
             sprite.drawSmoothArc(cx, cy, r, ir, 30, 330, gaugeColor, backColor);
             //sprite.drawSmoothArc(320 - cx, cy, r, ir, 30, 330, gaugeColor, backColor);
 
             sprite.drawSmoothArc(cx, cy, rir, rir - 1, 10, 350, gaugeColor, backColor);
 
-            for (int i = 0; i < 26; i++) {
-                if (i < 20) {
+            for (int i = 0; i <= (maxValue / 10); i++) {
+                if (i < ((maxValue / 10) - ((maxValue / 10) - 40))) {
                     color1 = gaugeColor;
-                    color2 = TFT_WHITE;
+                    color2 = lowNumericColor;
                 }
                 else {
                     color1 = purple;
-                    color2 = purple;
+                    color2 = highNumericColor;
                 }
 
                 if (i % 2 == 0) {
-                    sprite.drawWedgeLine(x[i * 12], y[i * 12], px[i * 12], py[i * 12], 2, 1, color1);
+                    sprite.drawWedgeLine(x[i * spacingFactor], y[i * spacingFactor], px[i * spacingFactor], py[i * spacingFactor], 2, 1, color1);
                     sprite.setTextColor(color2, backColor);
-                    sprite.drawString(String(i * 10), lx[i * 12], ly[i * 12]);
+                    sprite.drawString(String(i * 10), lx[i * spacingFactor], ly[i * spacingFactor]);
                 }
                 else
-                    sprite.drawWedgeLine(x[i * 12], y[i * 12], px[i * 12], py[i * 12], 1, 1, color2);
+                    sprite.drawWedgeLine(x[i * spacingFactor], y[i * spacingFactor], px[i * spacingFactor], py[i * spacingFactor], 1, 1, color2);
+            }
+
+            /* draw the units at the bottom of the screen */
+            sprite.drawString(units, unitsLocationX, unitsLocationY);
+
+            /* show the number in the center of the gauge */
+            if(showNumberInMiddle) {
+                sprite.loadFont(asap80Font);
+                int speedValue = gaugeValue;
+                sprite.drawString(String(speedValue), cx, cy);
             }
         } /* drawGage */
 
 
         void SpeedoTypeGauge::speedoLoop() {
-            static u16_t milliseconds = 0;
+            static long milliseconds = 0;
 
-            if (millis() - milliseconds > 100) {
-                milliseconds = millis();
-                speedAngle++;
-                if(speedAngle > 240) {
-                    speedAngle=0;
+            if(sweep) {
+                if (millis() - milliseconds > 500) {
+                    milliseconds = millis();
+                    gaugeValue++;
+                    if(gaugeValue > maxValue) {
+                        gaugeValue = 0;
+                    }
                 }
             }
     
 #ifdef SMALL_DIAL
             M5Dial.update();
 #endif
+            USBSerial.println(spacingFactor);
 
-            sA = speedAngle * 1.2;
+            sA = ((gaugeValue * spacingFactor) / 10);
+
             sprite.createSprite(240, 240);
-            sprite.fillSprite(0x010B);
+            sprite.fillSprite(backgroundColor);//0x010B
             sprite.setTextColor(TFT_WHITE, backColor);
     
 #ifdef SMALL_DIAL
@@ -105,7 +152,7 @@
 #ifdef BIG_DIAL
             sprite.loadFont(asap32Font);
 #endif
-            drawGage();
+            drawGauge();
 
             sprite.drawWedgeLine(px[(int)sA], py[(int)sA], nx[(int)sA], ny[(int)sA], 2, 2, needleColor);
 
